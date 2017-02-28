@@ -1,0 +1,75 @@
+
+class TestPage{
+  view main{
+      <div class="@(data.wrapperclass)">
+        <h1>Comments</h1>
+        //These Comments will be stripped outfile
+        /*
+          As will these
+        */
+        <!-- HTML COMMENT SHOULD BE IN CODE -->
+        <h1>Characters</h1>
+          \{\}[]()\@\\
+        <h1>Blocks</h1>
+        <pre>\@\{\} = --&gt;@{var list = data.li;}&lt;--</pre>
+        <pre>\@() = --&gt;@(data.testString)&lt;--</pre>
+        <h1>Conditionals</h1>
+        <h2>for</h2>
+        <ul>@(conditionals.forloop(list))</ul>
+        <h2>if, else if, else</h2>
+          @(conditionals.ifelse({content: 'Lorem Ipsum wants to be em\\\'d', b:false, em:true}))
+        <h2>while</h2>
+          @(conditionals.whileloop(utilities.trimString("  I EXECUTED IN A WHILE LOOP  ")))
+        <h2>mixed</h2>
+        @(conditionals.mixed(data.mixed))
+      </div>
+  }
+}
+class utilities{
+  function trimString{
+    return data.trim();
+  }
+}
+class conditionals {
+  view forloop{
+    @for(var i = 0; i < data.length; i++)
+      <li style="@(data[i].style)">@(utilities.trimString(data[i].content))</li>
+  }
+  view ifelse{
+    //The bad formatting is intentional. Don't judge.
+    @if(data.title) <h3>@(data.title)</h3>
+    @if(data.b)<b> @(data.content) </b>
+    @elseif(data.em){
+<em>
+  @(data.content)
+</em>
+    }
+    @else
+          <span>@(data.content)</span>
+  }
+  view whileloop{
+    @{var condition = true;}
+    @while(condition){
+       --&gt;@(data)&lt;--
+      @{condition = false;}
+    }
+  }
+  view mixed {
+    @{if(data)\{}
+     <h1>@(data)</h1>
+    @{\}}
+  }
+}
+class dev{
+  function testObject{
+    return {
+      'testString': 'Lorem Ipsum',
+      'mixed': 'Wierd mixed code',
+      'li':[{'style':'color:red','content':'Red' }, {'style':'color:blue','content':'Blue'}],
+      'wrapperclass': 'stylish'
+    }
+  }
+  function test{
+    return TestPage.main(TestPage.testObject());
+  }
+}
