@@ -76,17 +76,3 @@ utilities.htmlencode = function(data){
 	return'&#'+i.charCodeAt(0)+';';});
 }
 ```
-#### Functions
-```
-class utilities{
-  function trimString{
-    return data.trim();
-  }
-}
-```
-```JavaScript
-var utilities = utilities || {};
-utilities.trimString = function(data){
-	return data.trim();
-}
-```
