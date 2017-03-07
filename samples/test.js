@@ -1,4 +1,3 @@
-
 var TestPage = TestPage || {};
 TestPage.main = function(data){
 	var $O = '';
@@ -76,4 +75,10 @@ dev.testObject = function(data){
 }
 dev.test = function(data){
 	return TestPage.main(TestPage.testObject());
+}
+if(typeof module!=='undefined'&&typeof module.exports!=='undefined'){
+	module.exports.TestPage=TestPage;
+	module.exports.utilities=utilities;
+	module.exports.conditionals=conditionals;
+	module.exports.dev=dev;
 }

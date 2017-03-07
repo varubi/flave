@@ -7,7 +7,7 @@
 
 class $V{
   view main{
-      <div class="@(data.wrapperclass)">
+        <div class="@(data.wrapperclass)">
         <h1>Comments</h1>
         //These Comments will be stripped outfile
         /*

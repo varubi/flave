@@ -1,9 +1,8 @@
-
 var sample = sample || {};
 sample.main = function(data){
 	var $O = '';
 	var list = data.list;
-	$O += '<h1>A sample page</h1>\n'
+	$O += '<h1 class="sample-page">Sample page</h1>\n'
 		+ this.lists(list)
 		+ this.blogpost({title: data.title, content: data.content, date: data.date});
 	return $O;
@@ -31,4 +30,8 @@ utilities.htmlencode = function(data){
 	// See more @ http://stackoverflow.com/questions/18749591/encode-html-entities-in-javascript
 	return data.replace(/[u00A0-u9999<>&]/gim, function(i){
 	return'&#'+i.charCodeAt(0)+';';});
+}
+if(typeof module!=='undefined'&&typeof module.exports!=='undefined'){
+	module.exports.sample=sample;
+	module.exports.utilities=utilities;
 }

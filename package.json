@@ -1,0 +1,25 @@
+{
+  "name": "flave",
+  "version": "1.1.1",
+  "description": "A Razor like View transpiler for JavaScript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/varubi/flave.git"
+  },
+  "keywords": [
+    "Razor",
+    "view",
+    "Transpiler",
+    "Template"
+  ],
+  "author": "Varubi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/varubi/flave/issues"
+  },
+  "homepage": "https://github.com/varubi/flave#readme"
+}

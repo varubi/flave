@@ -13,16 +13,20 @@
 
   function Transpile(infile, outfile) {
       FS.writeFileSync(outfile, '');
+      this.transpiled = '';
+      this.classlist = [];
       this.outfile = outfile;
       this.config = config;
-      this.lastWrite = ' ';
+      this.classname = config.classname;
+      this.lastWrite = '\n';
       this.indent = '';
       this.tokens = new Tokens(infile);
       this.views = [];
       this.nestLevel = [];
       this.index;
+
       this.testGrammarAll();
-      return "'" + outfile + "' is not ready.";
+      FS.writeFileSync(outfile, this.transpiled);
   }
 
   Transpile.prototype.testGrammarAll = function() {
@@ -32,11 +36,21 @@
           } else if (this.tokens.current().Info.Type == 'COMMENT')
               this.testGrammarBlockComment();
           else if (this.tokens.current().Info.Type == 'WHITESPACE')
-              return;
+              break;
           else {
               throw this.error('Expected Comments or Classes, not \'' + this.tokens.current().Value + '\'');
           }
       }
+      this.writeNewLine()
+      this.writeSegment('if(typeof module!==\'undefined\'&&typeof module.exports!==\'undefined\'){')
+      this.indent_add();
+      for (var i = 0; i < this.classlist.length; i++) {
+          this.writeNewLine(true);
+          this.writeSegment('module.exports.' + this.classlist[i] + '=' + this.classlist[i] + ';');
+      }
+      this.indent_sub();
+      this.writeNewLine(true);
+      this.writeSegment('}');
   };
 
   Transpile.prototype.testGrammarClass = function() {
@@ -44,9 +58,11 @@
       if (!this.testName(this.tokens.current().Value))
           throw this.error('Invalid Class Name \'' + this.tokens.current().Value + '\'');
 
-      this.config.classname = this.tokens.current().Value;
+      this.classname = this.tokens.current().Value;
+      if(this.classlist.length)
       this.writeSegment('\n');
-      this.writeLiteral('var ' + this.config.classname + ' = ' + this.config.classname + ' || {};\n', true);
+      this.classlist.push(this.classname);
+      this.writeLiteral('var ' + this.classname + ' = ' + this.classname + ' || {};\n', true);
       this.tokens.skip();
       if (this.tokens.current().Info.Name !== 'GROUP_BLOCK_L') {
           throw this.error('Opening Bracket Expected {');
@@ -70,7 +86,7 @@
       if (!this.testName(this.tokens.current().Value))
           throw this.error('Invalid View Name \'' + this.tokens.current().Value + '\'');
 
-      this.writeSegment('\n' + this.config.classname + '.' + this.tokens.current().Value + ' = function(data){')
+      this.writeSegment('\n' + this.classname + '.' + this.tokens.current().Value + ' = function(data){')
 
 
       this.tokens.skip();
@@ -204,7 +220,6 @@
           }
           openstring = false;
       }
-
   }
 
   Transpile.prototype.testGrammarBlockLiteral = function() {
@@ -340,7 +355,7 @@
       if (write == '')
           return;
       this.lastWrite = string;
-      FS.appendFileSync(this.outfile, write);
+      this.transpiled += write;
   }
   Transpile.prototype.writeNewLine = function(indent) {
       if (!this.config.newlines)

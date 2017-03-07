@@ -32,6 +32,7 @@ class utilities{
 }
 class conditionals {
   view forloop{
+    
     @for(var i = 0; i < data.length; i++)
       <li style="@(data[i].style)">@(utilities.trimString(data[i].content))</li>
   }

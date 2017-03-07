@@ -3,7 +3,7 @@ class sample{
       @{
         var list = data.list;
       }
-      <h1>A sample page</h1>
+      <h1 class="sample-page">Sample page</h1>
       @(this.lists(list))
       @(this.blogpost({title: data.title, content: data.content, date: data.date}))
 
