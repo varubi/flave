@@ -1,4 +1,4 @@
-# Flave - beta
+# flave - beta
 ### A Razor like View transpiler for JavaScript.
 \- MC not included.
 
