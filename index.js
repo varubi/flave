@@ -1,32 +1,30 @@
-  const FS = require('fs');
   const Tokens = require('./tokens.js')
   const Dictionary = require('./dictionary.js')
 
-  var config = {
-      quote: '\'',
-      classname: 'flave',
-      stripcomments: true,
-      output: '$O',
-      trim: true,
-      newlines: true
-  }
-
-  function Transpile(infile, outfile) {
-      FS.writeFileSync(outfile, '');
+  function Transpile(input, config) {
+      this.config = {
+          quote: '\'',
+          classname: 'flave',
+          stripcomments: true,
+          output: '$O',
+          trim: true,
+          newlines: true
+      }
+      config = config || {};
+      for (var key in this.config)
+          if (config.hasOwnProperty(key))
+              this.config[key] = config[key];
       this.transpiled = '';
       this.classlist = [];
-      this.outfile = outfile;
-      this.config = config;
       this.classname = config.classname;
       this.lastWrite = '\n';
       this.indent = '';
-      this.tokens = new Tokens(infile);
+      this.tokens = new Tokens(input);
       this.views = [];
       this.nestLevel = [];
       this.index;
 
       this.testGrammarAll();
-      FS.writeFileSync(outfile, this.transpiled);
   }
 
   Transpile.prototype.testGrammarAll = function() {
@@ -59,8 +57,8 @@
           throw this.error('Invalid Class Name \'' + this.tokens.current().Value + '\'');
 
       this.classname = this.tokens.current().Value;
-      if(this.classlist.length)
-      this.writeSegment('\n');
+      if (this.classlist.length)
+          this.writeSegment('\n');
       this.classlist.push(this.classname);
       this.writeLiteral('var ' + this.classname + ' = ' + this.classname + ' || {};\n', true);
       this.tokens.skip();
@@ -397,4 +395,6 @@
   Transpile.prototype.indent_sub = function() {
       this.indent = this.indent.slice(0, -1)
   }
-  module.exports = Transpile;
+  module.exports.transpile = function(input, config) {
+      return new Transpile(input, config).transpiled;
+  };
