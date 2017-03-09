@@ -1,6 +1,6 @@
 {
   "name": "flave",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A Razor like View transpiler for JavaScript",
   "main": "index.js",
   "scripts": {
