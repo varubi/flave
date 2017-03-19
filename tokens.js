@@ -35,8 +35,11 @@ Tokens.prototype.push = function(chunk) {
         }
     })
 }
+Tokens.prototype.depleted = function() {
+    return this.index + 1 >= this.ary.length;
+}
 Tokens.prototype.next = function() {
-    if (this.index + 1 < this.ary.length) {
+    if (!this.depleted()) {
         this.index++;
         if (this.current().Info.Name == 'WHITESPACE_NEWLINE')
             this.line++;

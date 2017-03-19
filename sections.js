@@ -5,7 +5,7 @@ var Source = function(fobj) {
             Class(fobj, config);
         } else if (fobj.tokens.current().Info.Type == 'COMMENT')
             Comment(fobj, config);
-        else if (fobj.tokens.current().Info.Type == 'WHITESPACE')
+        else if (fobj.tokens.depleted())
             break;
         else {
             throw fobj.error('Expected Comments or Classes, not \'' + fobj.tokens.current().Value + '\'');
@@ -41,7 +41,7 @@ var Class = function(fobj, config) {
             Define(fobj, config);
         } else if (fobj.tokens.current().Info.Type == 'COMMENT')
             Comment(fobj, config);
-        else if (fobj.tokens.current().Info.Type == 'WHITESPACE' || fobj.tokens.current().Info.Name == 'GROUP_BLOCK_R')
+        else if (fobj.tokens.depleted() || fobj.tokens.current().Info.Name == 'GROUP_BLOCK_R')
             return;
         else {
             throw fobj.error('Expected Comments or function or view, not \'' + fobj.tokens.current().Value + '\'');
