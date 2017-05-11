@@ -15,11 +15,11 @@ TestPage.main = function(data){
 		+ '<h2>for</h2>\n'
 		+ '<ul>' + conditionals.forloop(list) + '</ul>\n'
 		+ '<h2>if, else if, else</h2>\n'
-		+ conditionals.ifelse({content:'Lorem Ipsum wants to be em\'d', b:false, em:true})
+		+ conditionals.ifelse({content: 'Lorem Ipsum wants to be em\'d', b:false, em:true}) + '\n'
 		+ '<h2>while</h2>\n'
-		+ conditionals.whileloop(utilities.trimString("I EXECUTED IN A WHILE LOOP"))
-		+ '<h2>mixed</h2>\n'
-		+ conditionals.mixed(data.mixed)
+		+ conditionals.whileloop(utilities.trimString("  I EXECUTED IN A WHILE LOOP  ")) + '\n'
+		+ '<h2>mixed</h2> ' + data.pre + ' ' + data.post + '\n'
+		+ conditionals.mixed(data.mixed) + '\n'
 		+ '</div>\n';
 	return $O;
 }
@@ -41,11 +41,11 @@ conditionals.ifelse = function(data){
 		$O += '<h3>' + data.title + '</h3>\n';
 	}
 	if(data.b){
-		$O += '<b>' + data.content + '</b>\n';
+		$O += '<b> ' + data.content + ' </b>\n';
 	}
 	else if(data.em){
 		$O += '<em>\n'
-			+ data.content
+			+ data.content + '\n'
 			+ '</em>\n';
 	}
 	else{
@@ -59,6 +59,7 @@ conditionals.whileloop = function(data){
 	while(condition){
 		$O += '--&gt;' + data + '&lt;--';
 		condition = false;
+		$O += '\n';
 	}
 	return $O;
 }
@@ -67,11 +68,12 @@ conditionals.mixed = function(data){
 	if(data){
 	$O += '<h1>' + data + '</h1>';
 	}
+	$O += '\n';
 	return $O;
 }
 var dev = dev || {};
 dev.testObject = function(data){
-	return{'testString':'Lorem Ipsum','mixed':'Wierd mixed code','li':[{'style':'color:red','content':'Red'},{'style':'color:blue','content':'Blue'}],'wrapperclass':'stylish'}
+	return {'testString': 'Lorem Ipsum','mixed': 'Wierd mixed code','li':[{'style':'color:red','content':'Red'}, {'style':'color:blue','content':'Blue'}],'wrapperclass': 'stylish'}
 }
 dev.test = function(data){
 	return TestPage.main(TestPage.testObject());

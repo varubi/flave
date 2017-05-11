@@ -1,4 +1,4 @@
-var Source = function(fobj) {
+var Source = function (fobj) {
     var config = fobj.config.layer();
     while (fobj.tokens.skip()) {
         if (fobj.tokens.current().Info.Name == 'FLAVE_CLASS') {
@@ -22,7 +22,7 @@ var Source = function(fobj) {
     fobj.writeNewLine(true);
     fobj.writeSegment('}');
 };
-var Class = function(fobj, config) {
+var Class = function (fobj, config) {
     fobj.tokens.skip();
     if (!fobj.testName(fobj.tokens.current().Value))
         throw fobj.error('Invalid Class Name \'' + fobj.tokens.current().Value + '\'');
@@ -48,7 +48,7 @@ var Class = function(fobj, config) {
         }
     }
 };
-var Define = function(fobj, config) {
+var Define = function (fobj, config) {
     var definer = fobj.tokens.current().Value;
     fobj.tokens.skip();
     if (!fobj.testName(fobj.tokens.current().Value))
@@ -73,7 +73,7 @@ var Define = function(fobj, config) {
     fobj.writeLiteral('}\n')
 }
 
-var Comment = function(fobj, config) {
+var Comment = function (fobj, config) {
     var obj = {};
     var open = fobj.tokens.current()
     obj.Name = (fobj.tokens.current().Info.Name == 'COMMENT_LINE' ? 'WHITESPACE_NEWLINE' : 'COMMENT_BLOCK_R');
@@ -85,8 +85,9 @@ var Comment = function(fobj, config) {
         fobj.writeNewLine();
     }
 }
-var View = function(fobj, config) {
+var View = function (fobj, config) {
     var openstream = false;
+    var emptystream = true;
     var inline = true;
     var openstring = false;
     var singleline = (fobj.tokens.current().Info.Type != 'GROUP')
@@ -155,8 +156,9 @@ var View = function(fobj, config) {
     if (openstream)
         fobj.writeLiteral((openstring ? '\\n' + config.quote : '') + ';', true);
 
-    function writeString(string) {
-        if (fobj.getString(string).join('').trim() == '')
+    function writeString(string) {        
+        string = fobj.getString(string).join('');
+        if ((!inline || emptystream) && string.trim() == '')
             return;
         if (!openstream) {
             fobj.writeNewLine();
@@ -164,13 +166,17 @@ var View = function(fobj, config) {
             inline = true;
             openstream = true;
             openstring = true;
+            emptystream = true;
         } else if (!inline || !openstring) {
             endString(true)
             fobj.writeLiteral(config.quote, true)
         }
+        if ((!inline || emptystream) && config.trim)
+            string = string.trimLeft();
         fobj.writeView(string)
         inline = true;
         openstring = true;
+        emptystream = false;
     }
 
     function endString(join) {
@@ -182,13 +188,14 @@ var View = function(fobj, config) {
             if (!openstream) {
                 fobj.writeLiteral(config.output + ' += ')
                 openstream = true;
+                emptystream = true;
             } else
                 fobj.writeViewJoin(inline);
         }
         openstring = false;
     }
 }
-var Literal = function(fobj, config) {
+var Literal = function (fobj, config) {
     fobj.nest();
     var inline = fobj.tokens.current().Info.Name != 'GROUP_BLOCK_L';
     var nestL = fobj.nestLevel.length;
@@ -223,13 +230,13 @@ var Literal = function(fobj, config) {
         }
     }
 }
-var String = function(fobj, config) {
+var String = function (fobj, config) {
     var skipped = fobj.tokens.skip({}, {
         Name: [fobj.tokens.current().Info.Name]
     }, true);
     fobj.writeLiteral(skipped, true)
 };
-var Iterator = function(fobj, config) {
+var Iterator = function (fobj, config) {
     fobj.writeLiteral(fobj.tokens.current().Value + '(', true);
     fobj.tokens.next();
 
@@ -242,7 +249,7 @@ var Iterator = function(fobj, config) {
     fobj.indent_sub()
     fobj.writeLiteral('}')
 };
-var Conditional = function(fobj, config) {
+var Conditional = function (fobj, config) {
     switch (fobj.tokens.current().Info.Name) {
         case 'CONDITIONAL_IF':
             fobj.writeLiteral('if', true)

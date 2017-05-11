@@ -19,7 +19,7 @@ class TestPage{
           @(conditionals.ifelse({content: 'Lorem Ipsum wants to be em\\\'d', b:false, em:true}))
         <h2>while</h2>
           @(conditionals.whileloop(utilities.trimString("  I EXECUTED IN A WHILE LOOP  ")))
-        <h2>mixed</h2>
+        <h2>mixed</h2> @(data.pre) @(data.post)
         @(conditionals.mixed(data.mixed))
       </div>
   }

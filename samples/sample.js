@@ -3,8 +3,8 @@ sample.main = function(data){
 	var $O = '';
 	var list = data.list;
 	$O += '<h1 class="sample-page">Sample page</h1>\n'
-		+ this.lists(list)
-		+ this.blogpost({title: data.title, content: data.content, date: data.date});
+		+ this.lists(list) + '\n'
+		+ this.blogpost({title: data.title, content: data.content, date: data.date}) + '\n';
 	return $O;
 }
 sample.lists = function(data){
@@ -18,8 +18,8 @@ sample.lists = function(data){
 }
 sample.blogpost = function(data){
 	var $O = '';
-	$O += '<h1>' + utilities.htmlencode(data.title)if(data.date){
-		$O += '-' + data.date;
+	$O += '<h1>' + utilities.htmlencode(data.title) + ' ';if(data.date){
+		$O += '- ' + data.date + '\n';
 	}
 	$O += '</h1>\n'
 		+ '<p>' + utilities.htmlencode(data.content) + '</p>\n';
@@ -29,7 +29,7 @@ var utilities = utilities || {};
 utilities.htmlencode = function(data){
 	// See more @ http://stackoverflow.com/questions/18749591/encode-html-entities-in-javascript
 	return data.replace(/[u00A0-u9999<>&]/gim, function(i){
-	return'&#'+i.charCodeAt(0)+';';});
+	return '&#'+i.charCodeAt(0)+';';});
 }
 if(typeof module!=='undefined'&&typeof module.exports!=='undefined'){
 	module.exports.sample=sample;

@@ -28,11 +28,11 @@ function Transpile(input, config) {
 
 }
 
-Transpile.prototype.testName = function(name) {
+Transpile.prototype.testName = function (name) {
     return (new RegExp('^[a-zA-z_$][a-zA-z_$\\d]+$')).test(name) && Dictionary.ReservedKeywords.indexOf(name) === -1;
 }
 
-Transpile.prototype.nest = function() {
+Transpile.prototype.nest = function () {
     if (this.tokens.current().Info.GroupEdge == 'OPEN')
         this.nestLevel.push(this.tokens.current())
     else if (this.nestLevel.length) {
@@ -46,10 +46,10 @@ Transpile.prototype.nest = function() {
     }
 }
 
-Transpile.prototype.error = function(message) {
+Transpile.prototype.error = function (message) {
     return message.replace(/\n/, 'New Line') + ' at Line ' + this.tokens.line;
 }
-Transpile.prototype.getString = function(ary) {
+Transpile.prototype.getString = function (ary) {
     if (typeof ary == 'undefined')
         var a = 1;
     var str = '';
@@ -61,15 +61,11 @@ Transpile.prototype.getString = function(ary) {
         for (var i = 0; i < ary.length; i++) {
             str += ary[i].Value;
         }
-    if (this.config.trim)
-        return str.split('\n').map(function(e) {
-            return e.trim()
-        });
     if (typeof ary == 'undefined')
         var a = 1;
     return str.split('\n');
 }
-Transpile.prototype.writeSegment = function(string) {
+Transpile.prototype.writeSegment = function (string) {
     var write = string;
     if (this.lastWrite.slice(-1) == '\n' && write.substr(0, 1) == '\n')
         write = write.substr(1);
@@ -80,44 +76,44 @@ Transpile.prototype.writeSegment = function(string) {
     this.lastWrite = string;
     this.transpiled += write;
 }
-Transpile.prototype.writeNewLine = function(indent) {
+Transpile.prototype.writeNewLine = function (indent) {
     if (!this.config.newlines)
         return;
     var nl = '\n' + (indent ? this.indent : '');
     this.writeSegment(nl)
 }
-Transpile.prototype.writeViewJoin = function(inline) {
+Transpile.prototype.writeViewJoin = function (inline) {
     if (!this.config.newlines) {
         this.writeSegment('+');
         return;
     }
     this.writeSegment((inline ? ' ' : '\t') + '+ ');
 };
-Transpile.prototype.writeLiteral = function(lines, inline) {
+Transpile.prototype.writeLiteral = function (lines, inline) {
     lines = this.getString(lines);
     for (var i = 0; i < lines.length; i++) {
         if (lines[i].trim() == '')
             continue;
         if (!inline)
             this.writeNewLine(true)
-        this.writeSegment(inline ? lines[i] : lines[i].trimLeft())
+        this.writeSegment(inline || !this.config.trim ? lines[i] : lines[i].trimLeft())
         if (i != lines.length - 1)
             this.writeNewLine()
         inline = false;
     }
 
 };
-Transpile.prototype.writeView = function(string) {
+Transpile.prototype.writeView = function (string) {
     string = this.getString(string);
     if (string.length > 1)
         throw 'some err';
     this.writeSegment(string[0].replace('\\', '\\\\').replace(new RegExp(this.config.quote, 'g'), '\\' + this.config.quote));
 
 }
-Transpile.prototype.indent_add = function() {
+Transpile.prototype.indent_add = function () {
     this.indent += '\t';
 }
-Transpile.prototype.indent_sub = function() {
+Transpile.prototype.indent_sub = function () {
     this.indent = this.indent.slice(0, -1)
 }
 
@@ -135,7 +131,7 @@ function Config(obj) {
                 writable: true
             },
             'layer': {
-                value: function() {
+                value: function () {
                     var layer = create(this.data);
                     for (var i = this.layers.length - 1; i >= 0; i--)
                         layer.layers.unshift(this.layers[i]);
@@ -149,12 +145,12 @@ function Config(obj) {
 
         function defineProps(key) {
             Object.defineProperty(config, key, {
-                get: function() {
+                get: function () {
                     for (var i = this.layers.length - 1; i >= 0; i--)
                         if (this.layers[i].data.hasOwnProperty(key))
                             return this.layers[i].data[key];
                 },
-                set: function(value) {
+                set: function (value) {
                     if (!Object.isSealed(this) || typeof this.layers[0][key] === typeof value)
                         config.data[key] = value;
                 },
@@ -165,12 +161,12 @@ function Config(obj) {
         config.layers.push(config)
         return config;
     }
-    var config = create(obj, true);
+    var config = create(obj);
     for (var key in obj)
         config[key] = obj[key];
 
     return Object.seal(config);
 }
-module.exports.transpile = function(input, config) {
+module.exports.transpile = function (input, config) {
     return new Transpile(input, config).transpiled;
 };
