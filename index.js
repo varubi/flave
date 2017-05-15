@@ -3,12 +3,13 @@ const Dictionary = require('./dictionary.js')
 const Sections = require('./sections.js')
 
 function Transpile(input, config) {
-    this.config = Config({
+    this.config = ProxyLayer({
         quote: '\'',
         stripcomments: true,
         output: '$O',
         trim: true,
-        newlines: true
+        newlines: true,
+        export: true
     })
     config = config || {};
     for (var key in config)
@@ -31,7 +32,6 @@ function Transpile(input, config) {
 Transpile.prototype.testName = function (name) {
     return (new RegExp('^[a-zA-z_$][a-zA-z_$\\d]+$')).test(name) && Dictionary.ReservedKeywords.indexOf(name) === -1;
 }
-
 Transpile.prototype.nest = function () {
     if (this.tokens.current().Info.GroupEdge == 'OPEN')
         this.nestLevel.push(this.tokens.current())
@@ -45,7 +45,6 @@ Transpile.prototype.nest = function () {
 
     }
 }
-
 Transpile.prototype.error = function (message) {
     return message.replace(/\n/, 'New Line') + ' at Line ' + this.tokens.line;
 }
@@ -117,56 +116,49 @@ Transpile.prototype.indent_sub = function () {
     this.indent = this.indent.slice(0, -1)
 }
 
-function Config(obj) {
-    function create(obj) {
-        var config = {}
-        Object.defineProperties(config, {
-            'data': {
-                value: {},
-                writable: true
-            },
-
-            'layers': {
-                value: [],
-                writable: true
-            },
-            'layer': {
-                value: function () {
-                    var layer = create(this.data);
-                    for (var i = this.layers.length - 1; i >= 0; i--)
-                        layer.layers.unshift(this.layers[i]);
-                    return Object.seal(layer);
-                }
-            }
-        })
-
-        for (var key in obj)
-            defineProps(key)
-
-        function defineProps(key) {
-            Object.defineProperty(config, key, {
-                get: function () {
-                    for (var i = this.layers.length - 1; i >= 0; i--)
-                        if (this.layers[i].data.hasOwnProperty(key))
-                            return this.layers[i].data[key];
-                },
-                set: function (value) {
-                    if (!Object.isSealed(this) || typeof this.layers[0][key] === typeof value)
-                        config.data[key] = value;
-                },
-                enumerable: true,
-            })
-
+function ProxyLayer(obj, layers) {
+    obj = obj || {};
+    layers = Array.isArray(layers) ? layers.slice() : [];
+    layers.unshift(obj);
+    var override = new Proxy(layers, {
+        get: (target, key) => layers.map((layer) => layer[key]),
+        set: function (target, key, value) {
+            for (var i = 0; i < layers.length; i++)
+                layers[i][key] = value;
         }
-        config.layers.push(config)
-        return config;
-    }
-    var config = create(obj);
-    for (var key in obj)
-        config[key] = obj[key];
+    })
 
-    return Object.seal(config);
+    return new Proxy(layers, {
+        get: function (target, key) {
+            switch (key) {
+                case 'layer':
+                    return (obj) => (layers.unshift(obj || {}) && true)
+
+                case 'unlayer':
+                    return () => (layers.shift() && true)
+
+                case 'relayer':
+                    return () => (layers[0] = {} && true)
+
+                case 'clone':
+                    return (obj) => ProxyLayer(obj, layers)
+
+                case 'override':
+                    return override;
+
+                case 'global':
+                    return layers[layers.length - 1];
+
+                default:
+                    for (var i = 0; i < layers.length; i++)
+                        if (layers[i].hasOwnProperty(key))
+                            return layers[i][key];
+            }
+        },
+        set: (target, key, value) => { target[0][key] = value; }
+    })
 }
+
 module.exports.transpile = function (input, config) {
     return new Transpile(input, config).transpiled;
 };

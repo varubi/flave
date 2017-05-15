@@ -1,179 +1,180 @@
-var Source = function (fobj) {
-    var config = fobj.config.layer();
-    while (fobj.tokens.skip()) {
-        if (fobj.tokens.current().Info.Name == 'FLAVE_CLASS') {
-            Class(fobj, config);
-        } else if (fobj.tokens.current().Info.Type == 'COMMENT')
-            Comment(fobj, config);
-        else if (fobj.tokens.depleted())
+var Source = function (transpiler) {
+    transpiler.config.layer();
+    while (transpiler.tokens.skip()) {
+        if (transpiler.tokens.current().Info.Name == 'FLAVE_CLASS') {
+            Class(transpiler);
+        } else if (transpiler.tokens.current().Info.Type == 'COMMENT')
+            Comment(transpiler);
+        else if (transpiler.tokens.depleted())
             break;
         else {
-            throw fobj.error('Expected Comments or Classes, not \'' + fobj.tokens.current().Value + '\'');
+            throw transpiler.error('Expected Comments or Classes, not \'' + transpiler.tokens.current().Value + '\'');
         }
     }
-    fobj.writeNewLine()
-    fobj.writeSegment('if(typeof module!==\'undefined\'&&typeof module.exports!==\'undefined\'){')
-    fobj.indent_add();
-    for (var i = 0; i < fobj.classlist.length; i++) {
-        fobj.writeNewLine(true);
-        fobj.writeSegment('module.exports.' + fobj.classlist[i] + '=' + fobj.classlist[i] + ';');
-    }
-    fobj.indent_sub();
-    fobj.writeNewLine(true);
-    fobj.writeSegment('}');
-};
-var Class = function (fobj, config) {
-    fobj.tokens.skip();
-    if (!fobj.testName(fobj.tokens.current().Value))
-        throw fobj.error('Invalid Class Name \'' + fobj.tokens.current().Value + '\'');
 
-    fobj.classname = fobj.tokens.current().Value;
-    if (fobj.classlist.length)
-        fobj.writeSegment('\n');
-    fobj.classlist.push(fobj.classname);
-    fobj.writeLiteral('var ' + fobj.classname + ' = ' + fobj.classname + ' || {};\n', true);
-    fobj.tokens.skip();
-    if (fobj.tokens.current().Info.Name !== 'GROUP_BLOCK_L') {
-        throw fobj.error('Opening Bracket Expected {');
+    if (transpiler.config.export) {
+        transpiler.writeNewLine()
+        transpiler.writeSegment('if(typeof module!==\'undefined\'&&typeof module.exports!==\'undefined\'){')
+        transpiler.writeSegment('module.exports={' + transpiler.classlist.map((classname) => classname + ':' + classname).join(',') + '};');
+        transpiler.writeSegment('}');
     }
-    while (fobj.tokens.skip()) {
-        if (fobj.tokens.current().Info.Type == 'DEFINER') {
-            Define(fobj, config);
-        } else if (fobj.tokens.current().Info.Type == 'COMMENT')
-            Comment(fobj, config);
-        else if (fobj.tokens.depleted() || fobj.tokens.current().Info.Name == 'GROUP_BLOCK_R')
-            return;
+    transpiler.config.unlayer();
+};
+var Class = function (transpiler) {
+    transpiler.tokens.skip();
+    if (!transpiler.testName(transpiler.tokens.current().Value))
+        throw transpiler.error('Invalid Class Name \'' + transpiler.tokens.current().Value + '\'');
+
+    transpiler.classname = transpiler.tokens.current().Value;
+    if (transpiler.classlist.length)
+        transpiler.writeSegment('\n');
+    transpiler.classlist.push(transpiler.classname);
+    transpiler.writeLiteral('var ' + transpiler.classname + ' = ' + transpiler.classname + ' || {};\n', true);
+    transpiler.tokens.skip();
+    if (transpiler.tokens.current().Info.Name !== 'GROUP_BLOCK_L') {
+        throw transpiler.error('Opening Bracket Expected {');
+    }
+    transpiler.config.layer();
+    while (transpiler.tokens.skip()) {
+        if (transpiler.tokens.current().Info.Type == 'DEFINER') {
+            Define(transpiler);
+            transpiler.config.relayer();
+        } else if (transpiler.tokens.current().Info.Type == 'COMMENT')
+            Comment(transpiler);
+        else if (transpiler.tokens.depleted() || transpiler.tokens.current().Info.Name == 'GROUP_BLOCK_R')
+            return transpiler.config.unlayer();
         else {
-            throw fobj.error('Expected Comments or function or view, not \'' + fobj.tokens.current().Value + '\'');
+            throw transpiler.error('Expected Comments or function or view, not \'' + transpiler.tokens.current().Value + '\'');
         }
     }
+    transpiler.config.unlayer();
 };
-var Define = function (fobj, config) {
-    var definer = fobj.tokens.current().Value;
-    fobj.tokens.skip();
-    if (!fobj.testName(fobj.tokens.current().Value))
-        throw fobj.error('Invalid View Name \'' + fobj.tokens.current().Value + '\'');
+var Define = function (transpiler) {
+    var definer = transpiler.tokens.current().Value;
+    transpiler.tokens.skip();
+    if (!transpiler.testName(transpiler.tokens.current().Value))
+        throw transpiler.error('Invalid View Name \'' + transpiler.tokens.current().Value + '\'');
 
-    fobj.writeSegment('\n' + fobj.classname + '.' + fobj.tokens.current().Value + ' = function(data){')
+    transpiler.writeSegment('\n' + transpiler.classname + '.' + transpiler.tokens.current().Value + ' = function(data){')
 
 
-    fobj.tokens.skip();
-    if (fobj.tokens.current().Info.Name !== 'GROUP_BLOCK_L') {
-        throw fobj.error('Opening Bracket Expected {');
+    transpiler.tokens.skip();
+    if (transpiler.tokens.current().Info.Name !== 'GROUP_BLOCK_L') {
+        throw transpiler.error('Opening Bracket Expected {');
     }
-    fobj.indent_add();
+    transpiler.indent_add();
     if (definer.toLowerCase() == 'function')
-        Literal(fobj, config)
+        Literal(transpiler)
     else {
-        fobj.writeLiteral('\nvar ' + config.output + ' = \'\';')
-        View(fobj, config)
-        fobj.writeLiteral('\nreturn ' + config.output + ';\n')
+        transpiler.writeLiteral('\nvar ' + transpiler.config.output + ' = \'\';')
+        View(transpiler)
+        transpiler.writeLiteral('\nreturn ' + transpiler.config.output + ';\n')
     }
-    fobj.indent_sub();
-    fobj.writeLiteral('}\n')
+    transpiler.indent_sub();
+    transpiler.writeLiteral('}\n')
 }
 
-var Comment = function (fobj, config) {
+var Comment = function (transpiler) {
     var obj = {};
-    var open = fobj.tokens.current()
-    obj.Name = (fobj.tokens.current().Info.Name == 'COMMENT_LINE' ? 'WHITESPACE_NEWLINE' : 'COMMENT_BLOCK_R');
-    var comment = fobj.tokens.skip(null, obj);
-    if (!config.stripcomments) {
-        fobj.writeLiteral(open.Value, true)
-        fobj.writeLiteral(comment, open.Info.Name === 'COMMENT_LINE')
-        fobj.writeLiteral(fobj.tokens.current().Value)
-        fobj.writeNewLine();
+    var open = transpiler.tokens.current()
+    obj.Name = (transpiler.tokens.current().Info.Name == 'COMMENT_LINE' ? 'WHITESPACE_NEWLINE' : 'COMMENT_BLOCK_R');
+    var comment = transpiler.tokens.skip(null, obj);
+    if (!transpiler.config.stripcomments) {
+        transpiler.writeLiteral(open.Value, true)
+        transpiler.writeLiteral(comment, open.Info.Name === 'COMMENT_LINE')
+        transpiler.writeLiteral(transpiler.tokens.current().Value)
+        transpiler.writeNewLine();
     }
 }
-var View = function (fobj, config) {
+var View = function (transpiler) {
     var openstream = false;
     var emptystream = true;
     var inline = true;
     var openstring = false;
-    var singleline = (fobj.tokens.current().Info.Type != 'GROUP')
+    var singleline = (transpiler.tokens.current().Info.Type != 'GROUP')
     if (!singleline)
-        fobj.nest();
+        transpiler.nest();
     else
-        fobj.tokens.prev();
+        transpiler.tokens.prev();
 
-    var nestL = fobj.nestLevel.length;
+    var nestL = transpiler.nestLevel.length;
     var skipped;
-    while (fobj.nestLevel.length >= nestL) {
-        skipped = fobj.tokens.skip({}, {
+    while (transpiler.nestLevel.length >= nestL) {
+        skipped = transpiler.tokens.skip({}, {
             Name: ['FLAVE_DELIMITER', 'WHITESPACE_NEWLINE', 'GROUP_BLOCK_R'],
             Type: ['COMMENT']
         }, true);
         writeString(skipped)
 
         skipped = [];
-        switch (fobj.tokens.current().Info.Type) {
+        switch (transpiler.tokens.current().Info.Type) {
             case 'DELIMITER':
-                fobj.tokens.next();
-                if (fobj.tokens.current().Info.Name == 'GROUP_BLOCK_L') {
+                transpiler.tokens.next();
+                if (transpiler.tokens.current().Info.Name == 'GROUP_BLOCK_L') {
                     inline = true;
                     endString()
-                    Literal(fobj, config);
+                    Literal(transpiler);
                     openstream = false;
-                } else if (fobj.tokens.current().Info.Name == 'GROUP_GROUP_L') {
+                } else if (transpiler.tokens.current().Info.Name == 'GROUP_GROUP_L') {
                     endString(true)
-                    Literal(fobj, config);
-                } else if (fobj.tokens.current().Info.Type == 'CONDITIONAL') {
+                    Literal(transpiler);
+                } else if (transpiler.tokens.current().Info.Type == 'CONDITIONAL') {
                     endString()
-                    Conditional(fobj, config);
+                    Conditional(transpiler);
                     openstream = false;
-                } else if (fobj.tokens.current().Info.Type == 'ITERATOR') {
+                } else if (transpiler.tokens.current().Info.Type == 'ITERATOR') {
                     endString()
-                    Iterator(fobj, config);
+                    Iterator(transpiler);
                     openstream = false;
                 } else {
-                    throw fobj.error('Not Sure what to do');
+                    throw transpiler.error('Not Sure what to do');
                 }
                 break;
 
             case 'COMMENT':
-                if (fobj.tokens.current().Info.Name == 'COMMENT_LINE')
-                    fobj.tokens.skip({}, {
+                if (transpiler.tokens.current().Info.Name == 'COMMENT_LINE')
+                    transpiler.tokens.skip({}, {
                         Name: 'WHITESPACE_NEWLINE'
                     });
-                else if (fobj.tokens.current().Info.Name == 'COMMENT_BLOCK_L') {
-                    fobj.tokens.skip({}, {
+                else if (transpiler.tokens.current().Info.Name == 'COMMENT_BLOCK_L') {
+                    transpiler.tokens.skip({}, {
                         Type: 'COMMENT_BLOCK_R'
                     });
                 }
                 break;
             case 'GROUP':
-                fobj.nest()
-                if (fobj.nestLevel.length >= nestL)
-                    writeString(fobj.tokens.current().Value)
+                transpiler.nest()
+                if (transpiler.nestLevel.length >= nestL)
+                    writeString(transpiler.tokens.current().Value)
                 break;
             default:
                 break;
         }
-        inline = fobj.tokens.current().Info.Name != 'WHITESPACE_NEWLINE';
+        inline = transpiler.tokens.current().Info.Name != 'WHITESPACE_NEWLINE';
         if (singleline && !inline)
             break;
     }
     if (openstream)
-        fobj.writeLiteral((openstring ? '\\n' + config.quote : '') + ';', true);
+        transpiler.writeLiteral((openstring ? '\\n' + transpiler.config.quote : '') + ';', true);
 
-    function writeString(string) {        
-        string = fobj.getString(string).join('');
+    function writeString(string) {
+        string = transpiler.getString(string).join('');
         if ((!inline || emptystream) && string.trim() == '')
             return;
         if (!openstream) {
-            fobj.writeNewLine();
-            fobj.writeLiteral(config.output + ' += ' + config.quote)
+            transpiler.writeNewLine();
+            transpiler.writeLiteral(transpiler.config.output + ' += ' + transpiler.config.quote)
             inline = true;
             openstream = true;
             openstring = true;
             emptystream = true;
         } else if (!inline || !openstring) {
             endString(true)
-            fobj.writeLiteral(config.quote, true)
+            transpiler.writeLiteral(transpiler.config.quote, true)
         }
-        if ((!inline || emptystream) && config.trim)
+        if ((!inline || emptystream) && transpiler.config.trim)
             string = string.trimLeft();
-        fobj.writeView(string)
+        transpiler.writeView(string)
         inline = true;
         openstring = true;
         emptystream = false;
@@ -181,101 +182,101 @@ var View = function (fobj, config) {
 
     function endString(join) {
         if (openstream && openstring)
-            fobj.writeLiteral((!inline ? '\\n' : '') + config.quote + (!join ? ';' : ''), true);
+            transpiler.writeLiteral((!inline ? '\\n' : '') + transpiler.config.quote + (!join ? ';' : ''), true);
         if (!inline)
-            fobj.writeNewLine(true);
+            transpiler.writeNewLine(true);
         if (join) {
             if (!openstream) {
-                fobj.writeLiteral(config.output + ' += ')
+                transpiler.writeLiteral(transpiler.config.output + ' += ')
                 openstream = true;
                 emptystream = true;
             } else
-                fobj.writeViewJoin(inline);
+                transpiler.writeViewJoin(inline);
         }
         openstring = false;
     }
 }
-var Literal = function (fobj, config) {
-    fobj.nest();
-    var inline = fobj.tokens.current().Info.Name != 'GROUP_BLOCK_L';
-    var nestL = fobj.nestLevel.length;
+var Literal = function (transpiler) {
+    transpiler.nest();
+    var inline = transpiler.tokens.current().Info.Name != 'GROUP_BLOCK_L';
+    var nestL = transpiler.nestLevel.length;
     var skipped;
-    var currentline = fobj.tokens.line;
-    while (fobj.nestLevel.length >= nestL) {
-        var skipped = fobj.tokens.skip({}, {
+    var currentline = transpiler.tokens.line;
+    while (transpiler.nestLevel.length >= nestL) {
+        var skipped = transpiler.tokens.skip({}, {
             Name: ['WHITESPACE_NEWLINE'],
             Type: ['GROUP', 'STRING']
         }, true);
-        fobj.writeLiteral(skipped, inline)
+        transpiler.writeLiteral(skipped, inline)
         skipped = [];
-        switch (fobj.tokens.current().Info.Type) {
+        switch (transpiler.tokens.current().Info.Type) {
             case 'GROUP':
                 inline = true;
-                fobj.nest()
-                if (fobj.nestLevel.length >= nestL)
-                    fobj.writeSegment(fobj.tokens.current().Value)
+                transpiler.nest()
+                if (transpiler.nestLevel.length >= nestL)
+                    transpiler.writeSegment(transpiler.tokens.current().Value)
                 break;
             case 'STRING':
                 inline = true;
-                fobj.writeSegment(fobj.tokens.current().Value)
-                String(fobj, config);
-                fobj.writeSegment(fobj.tokens.current().Value)
+                transpiler.writeSegment(transpiler.tokens.current().Value)
+                String(transpiler);
+                transpiler.writeSegment(transpiler.tokens.current().Value)
                 break;
             case 'WHITESPACE':
                 inline = false;
-                fobj.writeLiteral(fobj.tokens.current().Value)
+                transpiler.writeLiteral(transpiler.tokens.current().Value)
                 break
             default:
 
         }
     }
 }
-var String = function (fobj, config) {
-    var skipped = fobj.tokens.skip({}, {
-        Name: [fobj.tokens.current().Info.Name]
+var String = function (transpiler) {
+    var skipped = transpiler.tokens.skip({}, {
+        Name: [transpiler.tokens.current().Info.Name]
     }, true);
-    fobj.writeLiteral(skipped, true)
+    transpiler.writeLiteral(skipped, true)
 };
-var Iterator = function (fobj, config) {
-    fobj.writeLiteral(fobj.tokens.current().Value + '(', true);
-    fobj.tokens.next();
+var Iterator = function (transpiler) {
+    transpiler.writeLiteral(transpiler.tokens.current().Value + '(', true);
+    transpiler.tokens.next();
 
-    Literal(fobj, config);
-    fobj.writeLiteral(')', true)
-    fobj.writeLiteral('{', true);
-    fobj.indent_add();
-    fobj.tokens.skip();
-    View(fobj, config);
-    fobj.indent_sub()
-    fobj.writeLiteral('}')
+    Literal(transpiler);
+    transpiler.writeLiteral(')', true)
+    transpiler.writeLiteral('{', true);
+    transpiler.indent_add();
+    transpiler.tokens.skip();
+    View(transpiler);
+    transpiler.indent_sub()
+    transpiler.writeLiteral('}')
 };
-var Conditional = function (fobj, config) {
-    switch (fobj.tokens.current().Info.Name) {
+var Conditional = function (transpiler) {
+    switch (transpiler.tokens.current().Info.Name) {
         case 'CONDITIONAL_IF':
-            fobj.writeLiteral('if', true)
+            transpiler.writeLiteral('if', true)
             break;
         case 'CONDITIONAL_ELSEIF':
-            fobj.writeLiteral('else if', true)
+            transpiler.writeLiteral('else if', true)
             break;
         case 'CONDITIONAL_ELSE':
-            fobj.writeLiteral('else', true)
+            transpiler.writeLiteral('else', true)
             break;
         default:
 
     }
-    if (fobj.tokens.current().Info.Name !== 'CONDITIONAL_ELSE') {
-        fobj.tokens.next();
-        fobj.writeLiteral('(', true)
-        Literal(fobj, config);
-        fobj.writeLiteral(')', true)
+    if (transpiler.tokens.current().Info.Name !== 'CONDITIONAL_ELSE') {
+        transpiler.tokens.next();
+        transpiler.writeLiteral('(', true)
+        Literal(transpiler);
+        transpiler.writeLiteral(')', true)
     }
 
-    fobj.writeLiteral('{', true)
-    fobj.indent_add();
-    fobj.tokens.skip();
-    View(fobj, config);
-    fobj.indent_sub()
-    fobj.writeLiteral('}')
+    transpiler.writeLiteral('{', true)
+    transpiler.indent_add();
+    transpiler.tokens.skip();
+    View(transpiler);
+    transpiler.indent_sub()
+    transpiler.writeLiteral('}')
 
 
 };

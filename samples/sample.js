@@ -32,6 +32,5 @@ utilities.htmlencode = function(data){
 	return '&#'+i.charCodeAt(0)+';';});
 }
 if(typeof module!=='undefined'&&typeof module.exports!=='undefined'){
-	module.exports.sample=sample;
-	module.exports.utilities=utilities;
+module.exports={sample:sample,utilities:utilities}
 }
