@@ -2,31 +2,31 @@ const Tokens = require('./tokens.js')
 const Dictionary = require('./dictionary.js')
 const Sections = require('./sections.js')
 
-function Transpile(input, config) {
+function Transpile(input, config, method) {
     this.config = ProxyLayer({
         quote: '\'',
         stripcomments: true,
         output: '$O',
         trim: true,
         newlines: true,
-        export: true
+        export: true,
+        debug: false,
+        format: false,
     })
     config = config || {};
     for (var key in config)
         this.config[key] = config[key];
 
     this.transpiled = '';
-    this.classlist = [];
-    this.classname = '';
+    this.exportslist = [];
+    this.classname = false;
     this.lastWrite = '\n';
     this.indent = '';
     this.tokens = new Tokens(input);
     this.views = [];
     this.nestLevel = [];
     this.index;
-
-    Sections.Source(this);
-
+    Sections.ParseSource(this);
 }
 
 Transpile.prototype.testName = function (name) {
@@ -122,7 +122,7 @@ function ProxyLayer(obj, layers) {
     layers.unshift(obj);
     var override = new Proxy(layers, {
         get: (target, key) => layers.map((layer) => layer[key]),
-        set: function (target, key, value) {
+        set: (target, key, value) => {
             for (var i = 0; i < layers.length; i++)
                 layers[i][key] = value;
         }
@@ -132,13 +132,13 @@ function ProxyLayer(obj, layers) {
         get: function (target, key) {
             switch (key) {
                 case 'layer':
-                    return (obj) => (layers.unshift(obj || {}) && true)
+                    return (obj) => !!(layers.unshift(obj || {}))
 
                 case 'unlayer':
-                    return () => (layers.shift() && true)
+                    return () => !!(layers.shift())
 
                 case 'relayer':
-                    return () => (layers[0] = {} && true)
+                    return () => !!(layers[0] = {})
 
                 case 'clone':
                     return (obj) => ProxyLayer(obj, layers)
@@ -155,10 +155,14 @@ function ProxyLayer(obj, layers) {
                             return layers[i][key];
             }
         },
-        set: (target, key, value) => { target[0][key] = value; }
+        set: (target, key, value) => { target[0][key] = value; },
+        getOwnPropertyDescriptor: (target, property) => {
+            for (var i = 0; i < layers.length; i++)
+                if (layers[i].hasOwnProperty(key))
+                    return { configurable: true, enumerable: true };
+        }
     })
 }
 
-module.exports.transpile = function (input, config) {
-    return new Transpile(input, config).transpiled;
-};
+module.exports.transpile = (input, config) => new Transpile(input, config).transpiled;
+

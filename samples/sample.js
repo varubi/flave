@@ -6,7 +6,7 @@ sample.main = function(data){
 		+ this.lists(list) + '\n'
 		+ this.blogpost({title: data.title, content: data.content, date: data.date}) + '\n';
 	return $O;
-}
+};
 sample.lists = function(data){
 	var $O = '';
 	$O += '<ul>\n';
@@ -15,7 +15,7 @@ sample.lists = function(data){
 	}
 	$O += '</ul>\n';
 	return $O;
-}
+};
 sample.blogpost = function(data){
 	var $O = '';
 	$O += '<h1>' + utilities.htmlencode(data.title) + ' ';if(data.date){
@@ -24,13 +24,10 @@ sample.blogpost = function(data){
 	$O += '</h1>\n'
 		+ '<p>' + utilities.htmlencode(data.content) + '</p>\n';
 	return $O;
-}
+};
 var utilities = utilities || {};
 utilities.htmlencode = function(data){
-	// See more @ http://stackoverflow.com/questions/18749591/encode-html-entities-in-javascript
-	return data.replace(/[u00A0-u9999<>&]/gim, function(i){
+	    return data.replace(/[u00A0-u9999<>&]/gim, function(i){
 	return '&#'+i.charCodeAt(0)+';';});
-}
-if(typeof module!=='undefined'&&typeof module.exports!=='undefined'){
-module.exports={sample:sample,utilities:utilities}
-}
+};
+if(typeof module!=='undefined'&&typeof module.exports!=='undefined'){module.exports.sample=sample;module.exports.utilities=utilities;}

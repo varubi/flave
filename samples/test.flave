@@ -69,6 +69,7 @@ class dev{
     }
   }
   function test{
+    /a,}regex{r/.test('werw')
     return TestPage.main(TestPage.testObject());
   }
 }

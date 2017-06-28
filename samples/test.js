@@ -22,11 +22,11 @@ TestPage.main = function(data){
 		+ conditionals.mixed(data.mixed) + '\n'
 		+ '</div>\n';
 	return $O;
-}
+};
 var utilities = utilities || {};
 utilities.trimString = function(data){
 	return data.trim();
-}
+};
 var conditionals = conditionals || {};
 conditionals.forloop = function(data){
 	var $O = '';
@@ -34,7 +34,7 @@ conditionals.forloop = function(data){
 		$O += '<li style="' + data[i].style + '">' + utilities.trimString(data[i].content) + '</li>\n';
 	}
 	return $O;
-}
+};
 conditionals.ifelse = function(data){
 	var $O = '';
 	if(data.title){
@@ -52,7 +52,7 @@ conditionals.ifelse = function(data){
 		$O += '<span>' + data.content + '</span>\n';
 	}
 	return $O;
-}
+};
 conditionals.whileloop = function(data){
 	var $O = '';
 	var condition = true;
@@ -62,7 +62,7 @@ conditionals.whileloop = function(data){
 		$O += '\n';
 	}
 	return $O;
-}
+};
 conditionals.mixed = function(data){
 	var $O = '';
 	if(data){
@@ -70,14 +70,13 @@ conditionals.mixed = function(data){
 	}
 	$O += '\n';
 	return $O;
-}
+};
 var dev = dev || {};
 dev.testObject = function(data){
 	return {'testString': 'Lorem Ipsum','mixed': 'Wierd mixed code','li':[{'style':'color:red','content':'Red'}, {'style':'color:blue','content':'Blue'}],'wrapperclass': 'stylish'}
-}
+};
 dev.test = function(data){
+	/a,}regex{r/.test('werw')
 	return TestPage.main(TestPage.testObject());
-}
-if(typeof module!=='undefined'&&typeof module.exports!=='undefined'){
-module.exports={TestPage:TestPage,utilities:utilities,conditionals:conditionals,dev:dev}
-}
+};
+if(typeof module!=='undefined'&&typeof module.exports!=='undefined'){module.exports.TestPage=TestPage;module.exports.utilities=utilities;module.exports.conditionals=conditionals;module.exports.dev=dev;}

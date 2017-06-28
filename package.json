@@ -4,7 +4,7 @@
   "description": "A Razor like View transpiler for JavaScript",
   "main": "index.js",
   "scripts": {
-    "test": "scripts/test.js"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",

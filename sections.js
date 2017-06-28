@@ -1,34 +1,41 @@
-var Source = function (transpiler) {
+const Dictionary = require('./dictionary.js')
+    , $C = require('./constants.js')
+
+var ParseSource = function (transpiler) {
     transpiler.config.layer();
     while (transpiler.tokens.skip()) {
-        if (transpiler.tokens.current().Info.Name == 'FLAVE_CLASS') {
-            Class(transpiler);
-        } else if (transpiler.tokens.current().Info.Type == 'COMMENT')
-            Comment(transpiler);
+        if (transpiler.tokens.current().Info.Name == 'FLAVE_CLASS')
+            ParseClass(transpiler);
+        else if (transpiler.tokens.current().Info.Type == 'DEFINER')
+            ParseDefinition(transpiler);
+        else if (transpiler.tokens.current().Info.Type == 'COMMENT')
+            ParseComment(transpiler);
         else if (transpiler.tokens.depleted())
             break;
         else {
-            throw transpiler.error('Expected Comments or Classes, not \'' + transpiler.tokens.current().Value + '\'');
+            throw transpiler.error('Expected Comments or Definition, not \'' + transpiler.tokens.current().Value + '\'');
         }
+        transpiler.classname = false;
     }
 
     if (transpiler.config.export) {
         transpiler.writeNewLine()
         transpiler.writeSegment('if(typeof module!==\'undefined\'&&typeof module.exports!==\'undefined\'){')
-        transpiler.writeSegment('module.exports={' + transpiler.classlist.map((classname) => classname + ':' + classname).join(',') + '};');
+        for (var i = 0; i < transpiler.exportslist.length; i++)
+            transpiler.writeSegment('module.exports.' + transpiler.exportslist[i] + '=' + transpiler.exportslist[i] + ';');
         transpiler.writeSegment('}');
     }
     transpiler.config.unlayer();
-};
-var Class = function (transpiler) {
+}
+var ParseClass = function (transpiler) {
     transpiler.tokens.skip();
     if (!transpiler.testName(transpiler.tokens.current().Value))
         throw transpiler.error('Invalid Class Name \'' + transpiler.tokens.current().Value + '\'');
 
     transpiler.classname = transpiler.tokens.current().Value;
-    if (transpiler.classlist.length)
+    if (transpiler.exportslist.length)
         transpiler.writeSegment('\n');
-    transpiler.classlist.push(transpiler.classname);
+    transpiler.exportslist.push(transpiler.classname);
     transpiler.writeLiteral('var ' + transpiler.classname + ' = ' + transpiler.classname + ' || {};\n', true);
     transpiler.tokens.skip();
     if (transpiler.tokens.current().Info.Name !== 'GROUP_BLOCK_L') {
@@ -37,10 +44,10 @@ var Class = function (transpiler) {
     transpiler.config.layer();
     while (transpiler.tokens.skip()) {
         if (transpiler.tokens.current().Info.Type == 'DEFINER') {
-            Define(transpiler);
+            ParseDefinition(transpiler);
             transpiler.config.relayer();
         } else if (transpiler.tokens.current().Info.Type == 'COMMENT')
-            Comment(transpiler);
+            ParseComment(transpiler);
         else if (transpiler.tokens.depleted() || transpiler.tokens.current().Info.Name == 'GROUP_BLOCK_R')
             return transpiler.config.unlayer();
         else {
@@ -48,45 +55,51 @@ var Class = function (transpiler) {
         }
     }
     transpiler.config.unlayer();
-};
-var Define = function (transpiler) {
+}
+var ParseDefinition = function (transpiler) {
     var definer = transpiler.tokens.current().Value;
     transpiler.tokens.skip();
-    if (!transpiler.testName(transpiler.tokens.current().Value))
-        throw transpiler.error('Invalid View Name \'' + transpiler.tokens.current().Value + '\'');
-
-    transpiler.writeSegment('\n' + transpiler.classname + '.' + transpiler.tokens.current().Value + ' = function(data){')
-
-
+    var definername = transpiler.tokens.current().Value;
+    if (!transpiler.testName(definername))
+        throw transpiler.error('Invalid View Name \'' + definername + '\'');
+    if (transpiler.classname)
+        transpiler.writeSegment('\n' + transpiler.classname + '.' + definername + ' = function(data){')
+    else {
+        transpiler.writeSegment('\n function ' + definername + '(data){');
+        transpiler.exportslist.push(definername);
+    }
     transpiler.tokens.skip();
     if (transpiler.tokens.current().Info.Name !== 'GROUP_BLOCK_L') {
         throw transpiler.error('Opening Bracket Expected {');
     }
     transpiler.indent_add();
-    if (definer.toLowerCase() == 'function')
-        Literal(transpiler)
+    if (definer.toLowerCase() == 'function') {
+        transpiler.writeNewLine(true);
+        ParseJS(transpiler)
+    }
     else {
         transpiler.writeLiteral('\nvar ' + transpiler.config.output + ' = \'\';')
-        View(transpiler)
-        transpiler.writeLiteral('\nreturn ' + transpiler.config.output + ';\n')
+        ParseView(transpiler)
+        transpiler.writeLiteral('\n return ' + transpiler.config.output + ';\n')
     }
     transpiler.indent_sub();
-    transpiler.writeLiteral('}\n')
+    transpiler.writeLiteral('};\n')
 }
-
-var Comment = function (transpiler) {
-    var obj = {};
-    var open = transpiler.tokens.current()
-    obj.Name = (transpiler.tokens.current().Info.Name == 'COMMENT_LINE' ? 'WHITESPACE_NEWLINE' : 'COMMENT_BLOCK_R');
-    var comment = transpiler.tokens.skip(null, obj);
+var ParseComment = function (transpiler) {
+    var inline = transpiler.tokens.current().Info.Name == 'COMMENT_LINE';
+    var obj = {
+        Name: (inline ? 'WHITESPACE_NEWLINE' : 'COMMENT_BLOCK_R')
+    };
+    var comment = transpiler.tokens.skip({}, obj);
     if (!transpiler.config.stripcomments) {
-        transpiler.writeLiteral(open.Value, true)
-        transpiler.writeLiteral(comment, open.Info.Name === 'COMMENT_LINE')
-        transpiler.writeLiteral(transpiler.tokens.current().Value)
-        transpiler.writeNewLine();
+        transpiler.writeLiteral(Dictionary.ByName['COMMENT_BLOCK_L'].Symbol, true)
+        transpiler.writeLiteral(comment, inline)
+        transpiler.writeLiteral(Dictionary.ByName['COMMENT_BLOCK_R'].Symbol, true)
+        if (inline)
+            transpiler.writeNewLine();
     }
 }
-var View = function (transpiler) {
+var ParseView = function (transpiler) {
     var openstream = false;
     var emptystream = true;
     var inline = true;
@@ -99,7 +112,7 @@ var View = function (transpiler) {
 
     var nestL = transpiler.nestLevel.length;
     var skipped;
-    while (transpiler.nestLevel.length >= nestL) {
+    while (transpiler.nestLevel.length >= nestL && !transpiler.tokens.depleted()) {
         skipped = transpiler.tokens.skip({}, {
             Name: ['FLAVE_DELIMITER', 'WHITESPACE_NEWLINE', 'GROUP_BLOCK_R'],
             Type: ['COMMENT']
@@ -113,34 +126,27 @@ var View = function (transpiler) {
                 if (transpiler.tokens.current().Info.Name == 'GROUP_BLOCK_L') {
                     inline = true;
                     endString()
-                    Literal(transpiler);
+                    ParseJS(transpiler);
                     openstream = false;
                 } else if (transpiler.tokens.current().Info.Name == 'GROUP_GROUP_L') {
                     endString(true)
-                    Literal(transpiler);
+                    ParseJS(transpiler);
                 } else if (transpiler.tokens.current().Info.Type == 'CONDITIONAL') {
                     endString()
-                    Conditional(transpiler);
+                    ParseConditional(transpiler);
                     openstream = false;
                 } else if (transpiler.tokens.current().Info.Type == 'ITERATOR') {
                     endString()
-                    Iterator(transpiler);
+                    ParseIterator(transpiler);
                     openstream = false;
                 } else {
                     throw transpiler.error('Not Sure what to do');
                 }
                 break;
-
             case 'COMMENT':
-                if (transpiler.tokens.current().Info.Name == 'COMMENT_LINE')
-                    transpiler.tokens.skip({}, {
-                        Name: 'WHITESPACE_NEWLINE'
-                    });
-                else if (transpiler.tokens.current().Info.Name == 'COMMENT_BLOCK_L') {
-                    transpiler.tokens.skip({}, {
-                        Type: 'COMMENT_BLOCK_R'
-                    });
-                }
+                if (!transpiler.config.stripcomments && openstream)
+                    endString();
+                ParseComment(transpiler);
                 break;
             case 'GROUP':
                 transpiler.nest()
@@ -196,7 +202,7 @@ var View = function (transpiler) {
         openstring = false;
     }
 }
-var Literal = function (transpiler) {
+var ParseJS = function (transpiler) {
     transpiler.nest();
     var inline = transpiler.tokens.current().Info.Name != 'GROUP_BLOCK_L';
     var nestL = transpiler.nestLevel.length;
@@ -204,8 +210,8 @@ var Literal = function (transpiler) {
     var currentline = transpiler.tokens.line;
     while (transpiler.nestLevel.length >= nestL) {
         var skipped = transpiler.tokens.skip({}, {
-            Name: ['WHITESPACE_NEWLINE'],
-            Type: ['GROUP', 'STRING']
+            Name: ['WHITESPACE_NEWLINE', 'REGEX_OPEN'],
+            Type: ['GROUP', 'STRING', 'REGEX', 'COMMENT']
         }, true);
         transpiler.writeLiteral(skipped, inline)
         skipped = [];
@@ -216,11 +222,16 @@ var Literal = function (transpiler) {
                 if (transpiler.nestLevel.length >= nestL)
                     transpiler.writeSegment(transpiler.tokens.current().Value)
                 break;
+            case 'REGEX':
             case 'STRING':
                 inline = true;
                 transpiler.writeSegment(transpiler.tokens.current().Value)
-                String(transpiler);
+                ParseString(transpiler);
                 transpiler.writeSegment(transpiler.tokens.current().Value)
+                break;
+            case 'COMMENT':
+                inline = true;
+                ParseComment(transpiler)
                 break;
             case 'WHITESPACE':
                 inline = false;
@@ -231,26 +242,26 @@ var Literal = function (transpiler) {
         }
     }
 }
-var String = function (transpiler) {
+var ParseString = function (transpiler) {
     var skipped = transpiler.tokens.skip({}, {
         Name: [transpiler.tokens.current().Info.Name]
     }, true);
     transpiler.writeLiteral(skipped, true)
-};
-var Iterator = function (transpiler) {
+}
+var ParseIterator = function (transpiler) {
     transpiler.writeLiteral(transpiler.tokens.current().Value + '(', true);
     transpiler.tokens.next();
 
-    Literal(transpiler);
+    ParseJS(transpiler);
     transpiler.writeLiteral(')', true)
     transpiler.writeLiteral('{', true);
     transpiler.indent_add();
     transpiler.tokens.skip();
-    View(transpiler);
+    ParseView(transpiler);
     transpiler.indent_sub()
     transpiler.writeLiteral('}')
-};
-var Conditional = function (transpiler) {
+}
+var ParseConditional = function (transpiler) {
     switch (transpiler.tokens.current().Info.Name) {
         case 'CONDITIONAL_IF':
             transpiler.writeLiteral('if', true)
@@ -267,17 +278,26 @@ var Conditional = function (transpiler) {
     if (transpiler.tokens.current().Info.Name !== 'CONDITIONAL_ELSE') {
         transpiler.tokens.next();
         transpiler.writeLiteral('(', true)
-        Literal(transpiler);
+        ParseJS(transpiler);
         transpiler.writeLiteral(')', true)
     }
 
     transpiler.writeLiteral('{', true)
     transpiler.indent_add();
     transpiler.tokens.skip();
-    View(transpiler);
+    ParseView(transpiler);
     transpiler.indent_sub()
     transpiler.writeLiteral('}')
 
 
-};
-exports.Source = Source;
+}
+
+exports.ParseSource = ParseSource;
+exports.ParseClass = ParseClass;
+exports.ParseDefinition = ParseDefinition;
+exports.ParseComment = ParseComment;
+exports.ParseView = ParseView;
+exports.ParseJS = ParseJS;
+exports.ParseString = ParseString;
+exports.ParseIterator = ParseIterator;
+exports.ParseConditional = ParseConditional;

@@ -1,15 +1,11 @@
-var Lexemes = [{
+var Lexemes = [
+    {
         Symbol: '@',
         Name: 'FLAVE_DELIMITER',
         Type: 'DELIMITER',
         Delimiter: true
     },
     {
-        Symbol: ':',
-        Name: 'FLAVE_SEPERATOR',
-        Type: 'DELIMITER',
-        Delimiter: true
-    }, {
         Symbol: '\\',
         Name: 'ESCAPE',
         Type: 'DELIMITER',
@@ -136,6 +132,12 @@ var Lexemes = [{
         Delimiter: true
     },
     {
+        Symbol: '/',
+        Name: 'REGEX',
+        Type: 'REGEX',
+        Delimiter: true
+    },
+    {
         Symbol: '/*',
         Name: 'COMMENT_BLOCK_L',
         Type: 'COMMENT',
@@ -170,20 +172,19 @@ var Lexemes = [{
         Name: 'WHITESPACE_TAB',
         Type: 'WHITESPACE',
         Delimiter: true
-    },
+    }
 ]
 var BySymbol = {};
 var ByName = {};
-var Delimiters_Single = [];
-var Delimiters_Multi = [];
+var Delimiters = {};
 for (var i = 0; i < Lexemes.length; i++) {
     BySymbol[Lexemes[i].Symbol] = Lexemes[i];
     ByName[Lexemes[i].Name] = Lexemes[i];
     if (Lexemes[i].Delimiter) {
-        if (Lexemes[i].Symbol.length > 1)
-            Delimiters_Multi.push(Lexemes[i].Symbol);
-        else
-            Delimiters_Single.push(Lexemes[i].Symbol);
+        var key = Lexemes[i].Symbol.substr(0, 1)
+        if (!Delimiters[key])
+            Delimiters[key] = [];
+        Delimiters[key].push(Lexemes[i].Symbol);
     }
 }
 
@@ -242,5 +243,4 @@ exports.ReservedKeywords = ReservedKeywords;
 exports.Lexemes = Lexemes;
 exports.BySymbol = BySymbol;
 exports.ByName = ByName;
-exports.Delimiters_Single = Delimiters_Single;
-exports.Delimiters_Multi = Delimiters_Multi;
+exports.Delimiters = Delimiters;
