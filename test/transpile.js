@@ -10,6 +10,7 @@ const config = {
     format: false,
 }
 transpile('./test/samples/basic-tests.flave', './test/samples/basic-tests.js');
+transpile('./sample/sample.flave', './sample/sample.js');
 
 function transpile(src, dest) {
     fs.readFile(src, function (error, data) {
