@@ -11,7 +11,7 @@ function Transpile(input, config, method) {
         newlines: true,
         export: true,
         debug: false,
-        format: false,
+        format: true,
     })
     config = config || {};
     for (var key in config)
@@ -49,19 +49,15 @@ Transpile.prototype.error = function (message) {
     return message.replace(/\n/, 'New Line') + ' at Line ' + this.tokens.line;
 }
 Transpile.prototype.getString = function (ary) {
-    if (typeof ary == 'undefined')
-        var a = 1;
     var str = '';
     if (typeof ary == 'string')
         str = ary;
     else if (ary.length && typeof ary[0] == 'string')
         str = ary.join('\n')
     else if (ary.length && ary[0].hasOwnProperty('Value'))
-        for (var i = 0; i < ary.length; i++) {
+        for (var i = 0; i < ary.length; i++)
             str += ary[i].Value;
-        }
-    if (typeof ary == 'undefined')
-        var a = 1;
+
     return str.split('\n');
 }
 Transpile.prototype.writeSegment = function (string) {
@@ -76,13 +72,20 @@ Transpile.prototype.writeSegment = function (string) {
     this.transpiled += write;
 }
 Transpile.prototype.writeNewLine = function (indent) {
-    if (!this.config.newlines)
+    if (!this.config.format)
         return;
     var nl = '\n' + (indent ? this.indent : '');
     this.writeSegment(nl)
 }
+Transpile.prototype.writeView = function (string) {
+    string = this.getString(string);
+    if (string.length > 1)
+        throw 'some err';
+    this.writeSegment(string[0].replace('\\', '\\\\').replace(new RegExp(this.config.quote, 'g'), '\\' + this.config.quote));
+
+}
 Transpile.prototype.writeViewJoin = function (inline) {
-    if (!this.config.newlines) {
+    if (!this.config.format) {
         this.writeSegment('+');
         return;
     }
@@ -100,13 +103,6 @@ Transpile.prototype.writeLiteral = function (lines, inline) {
             this.writeNewLine()
         inline = false;
     }
-
-};
-Transpile.prototype.writeView = function (string) {
-    string = this.getString(string);
-    if (string.length > 1)
-        throw 'some err';
-    this.writeSegment(string[0].replace('\\', '\\\\').replace(new RegExp(this.config.quote, 'g'), '\\' + this.config.quote));
 
 }
 Transpile.prototype.indent_add = function () {

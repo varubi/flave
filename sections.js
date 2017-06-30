@@ -65,7 +65,7 @@ var ParseDefinition = function (transpiler) {
     if (transpiler.classname)
         transpiler.writeSegment('\n' + transpiler.classname + '.' + definername + ' = function(data){')
     else {
-        transpiler.writeSegment('\n function ' + definername + '(data){');
+        transpiler.writeSegment('\nfunction ' + definername + '(data){');
         transpiler.exportslist.push(definername);
     }
     transpiler.tokens.skip();
@@ -78,7 +78,7 @@ var ParseDefinition = function (transpiler) {
         ParseJS(transpiler)
     }
     else {
-        transpiler.writeLiteral('\nvar ' + transpiler.config.output + ' = \'\';')
+        transpiler.writeLiteral('\nvar ' + transpiler.config.output + ' = \'\';\n')
         ParseView(transpiler)
         transpiler.writeLiteral('\n return ' + transpiler.config.output + ';\n')
     }
@@ -109,7 +109,7 @@ var ParseView = function (transpiler) {
         transpiler.nest();
     else
         transpiler.tokens.prev();
-
+    var newlineC = transpiler.config.newlines ? '\\n' : ' ';
     var nestL = transpiler.nestLevel.length;
     var skipped;
     while (transpiler.nestLevel.length >= nestL && !transpiler.tokens.depleted()) {
@@ -161,7 +161,7 @@ var ParseView = function (transpiler) {
             break;
     }
     if (openstream)
-        transpiler.writeLiteral((openstring ? '\\n' + transpiler.config.quote : '') + ';', true);
+        transpiler.writeLiteral((openstring ? newlineC + transpiler.config.quote : '') + ';', true);
 
     function writeString(string) {
         string = transpiler.getString(string).join('');
@@ -188,7 +188,7 @@ var ParseView = function (transpiler) {
 
     function endString(join) {
         if (openstream && openstring)
-            transpiler.writeLiteral((!inline ? '\\n' : '') + transpiler.config.quote + (!join ? ';' : ''), true);
+            transpiler.writeLiteral((!inline ? newlineC : '') + transpiler.config.quote + (!join ? ';' : ''), true);
         if (!inline)
             transpiler.writeNewLine(true);
         if (join) {
@@ -198,6 +198,8 @@ var ParseView = function (transpiler) {
                 emptystream = true;
             } else
                 transpiler.writeViewJoin(inline);
+        } else {
+            openstream = false;
         }
         openstring = false;
     }
@@ -264,13 +266,13 @@ var ParseIterator = function (transpiler) {
 var ParseConditional = function (transpiler) {
     switch (transpiler.tokens.current().Info.Name) {
         case 'CONDITIONAL_IF':
-            transpiler.writeLiteral('if', true)
+            transpiler.writeLiteral('if', false)
             break;
         case 'CONDITIONAL_ELSEIF':
-            transpiler.writeLiteral('else if', true)
+            transpiler.writeLiteral('else if', false)
             break;
         case 'CONDITIONAL_ELSE':
-            transpiler.writeLiteral('else', true)
+            transpiler.writeLiteral('else', false)
             break;
         default:
 

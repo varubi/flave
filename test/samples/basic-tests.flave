@@ -1,0 +1,106 @@
+/*#### Comments ####*/
+/*## Single Line Comment ##*/
+view test{
+    <span> 
+    // Single Line Comment
+    </span>
+}
+/*## Block Comment Inline ##*/
+view test{
+    <span>/*Block Comment Inline*/</span>
+}
+/*## Block Comment MultiLine ##*/
+view test{
+    <span>
+        /* Block 
+        Comment 
+        Multiline*/
+    </span>
+}
+/*## HTML COMMENT ##*/
+view test{
+    <span>
+    <!-- HTML COMMENT SHOULD BE IN CODE -->
+    </span>
+}
+/*#### Conditionals ####*/
+/*## For Loop New Line##*/
+view test{
+    @for(var i = 0; i < data.length; i++)
+        <li>@(data[i].content)</li>
+}
+/*## For Loop New Brackets##*/
+view test{
+    @for(var i = 0; i < data.length; i++){
+        <li>@(data[i].content)</li>
+    }
+}
+/*## While New Lines##*/
+view test{
+    @while(condition)
+        @{condition = false;}
+}
+/*## While Brackets##*/
+view test{
+    @while(condition){
+        <span>@(data.content)</span>
+        @{condition = false;}
+    }
+}
+/*## If Else New Lines##*/
+view test{
+    @if(data.b)<b> @(data.content) </b>
+    @elseif(data.em) <em>  @(data.content) </em>
+    @else
+        <span>@(data.content)</span>
+}
+/*## If Else Brackets##*/
+view test{
+    @if(data.b){<b> @(data.content) </b>}
+    @elseif(data.em) { <em>  @(data.content) </em>}
+    @else {
+        <span>@(data.content)</span>
+    }
+}
+/*## Nested If Else New Lines##*/
+view test{
+    @if(data.nested)
+        @if(data.b)<b> @(data.content) </b>
+        @elseif(data.em) <em>  @(data.content) </em>
+        @else
+            <span>@(data.content)</span>
+}
+/*## Nested If Else Brackets##*/
+view test{
+    @if(data.nested){
+        @if(data.b){<b> @(data.content) </b>}
+        @elseif(data.em) { <em>  @(data.content) </em>}
+        @else {
+            <span>@(data.content)</span>
+        }
+    }
+}
+/*#### Whitespace ####*/
+/*## Space Before##*/
+view test{
+    <span> @(data.a)</span>
+}
+/*## Space Between##*/
+view test{
+    <span>@(data.a) @(data.b)</span>
+}
+/*## Space After##*/
+view test{
+    <span>@(data.a) </span>
+}
+/*#### Misc ####*/
+/*## Mixing JS##*/
+view test {
+    @{if(data)\{}
+        <h1>@(data)</h1>
+    @{\}}
+}
+/*## Special Characters##*/
+view test{
+    <span>\{\}[]()\@\\</span>
+}

@@ -2,7 +2,9 @@ const Dictionary = require('./dictionary.js')
     , $C = require('./constants.js')
 
 function Tokens(input) {
-    this.string = input.replace(/\r\n/gm, "\n");
+    this.string = input
+        .replace(/[\r\n]+/gm, "\n")
+        .replace(/(\n[\s\n]*\n)/gm, '\n');
     this.charidx = 0;
     this.mode = $C.FLAVE;
     this.ary = [];
