@@ -6,5 +6,5 @@
 The aim is to isolate all HTML producing code and associated logic so that you can generate isomorphic JavaScript views.
 
 
-### Examples
-![ScreenShot](https://raw.githubusercontent.com/varubi/flave/master/samples/sample.png?raw=true "ScreenShot")
+### Example
+![ScreenShot](https://raw.githubusercontent.com/varubi/flave/master/sample/sample.png?raw=true "ScreenShot")
