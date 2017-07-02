@@ -5,8 +5,7 @@ class sample{
       }
       <h1 class="sample-page">Sample page</h1>
       @(this.lists(list))
-      @(this.blogpost({title: data.title, content: data.content, date: data.date}))
-
+      @(this.blogpost({title: data.title, content: data.content, date: data.date})) 
     }
     view lists{
       <ul>
