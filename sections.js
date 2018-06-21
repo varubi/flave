@@ -275,7 +275,7 @@ var ParseConditional = function (transpiler) {
             transpiler.writeLiteral('else', false)
             break;
         default:
-
+            break;
     }
     if (transpiler.tokens.current().Info.Name !== 'CONDITIONAL_ELSE') {
         transpiler.tokens.next();
@@ -289,10 +289,26 @@ var ParseConditional = function (transpiler) {
     transpiler.tokens.skip();
     ParseView(transpiler);
     transpiler.indent_sub()
-    transpiler.writeLiteral('}')
-
-
+    transpiler.writeLiteral('}');
 }
+var ParseConfiguration = function (transpiler) {
+    transpiler.tokens.next();
+    var level = transpiler.tokens.current().Info.Name;
+    switch (level) {
+        case 'CONFIG_LOCAL':
+            transpiler.config[property] = value;
+            break;
+        case 'CONFIG_GLOBAL':
+            transpiler.config.global[property] = value;
+            break;
+        case 'CONFIG_OVERRIDE':
+            transpiler.config.override[property] = value;
+            break;
+        default:
+            break;
+    }
+}
+
 
 exports.ParseSource = ParseSource;
 exports.ParseClass = ParseClass;

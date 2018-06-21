@@ -9,11 +9,14 @@
 # Editor Extensions
 - [Atom](https://atom.io/packages/language-flave) 
 - [VSCode](https://marketplace.visualstudio.com/items?itemName=varubi.flave-vscode)
+
 # Preview
+
 ## Flave  
-![Before](https://raw.githubusercontent.com/varubi/flave/master/sample/sample.png?raw=true "Before")
+![Before](https://raw.githubusercontent.com/varubi/flave/master/sample/sample-flave.png?raw=true "Before")
+
 ## JavaScript  
-![After](https://raw.githubusercontent.com/varubi/flave/master/sample/samplejs.png?raw=true "After")
+![After](https://raw.githubusercontent.com/varubi/flave/master/sample/sample-js.png?raw=true "After")
 
 # Quick Guide
 
@@ -22,7 +25,7 @@ __Method__
 ```flave.transpile(flavestring, configuration)```  
 
 __Description__  
-There is currently only one method exposed. It's first argument is the flave code and the second argument is the configuration. See further below for configuration options.
+There is currently only one function exposed. It's first argument is the flave code and the second argument is the configuration. See further below for configuration options.
 
 __Example__
 ```JavaScript
@@ -66,7 +69,7 @@ Preserve new lines between HTML. If set to false new lines are replaced with a s
 
 - **format** *boolean*  
 Default: `true`  
-Attempt to format the transpiled JavaScript to match the way it looks in the *Flave* file.
+Attempt to indent code generated.
 
 - **export** *boolean*  
 Default: `true`  
