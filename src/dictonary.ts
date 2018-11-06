@@ -1,4 +1,4 @@
-const Lexemes = require('./symbols.json');
+import Lexemes from './symbols.json'
 const _Symbol: any = {};
 const _Name: any = {};
 const _delimiters: any = {};

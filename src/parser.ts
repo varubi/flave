@@ -1,9 +1,8 @@
-const ReservedKeywords = require('./reserved.json');
+import ReservedKeywords from './reserved.json';
 import { Names } from './dictonary';
 import { Constants } from './enums';
 import { Transpiler } from './transpiler'
 import { Tokens, Token } from './tokens'
-
 export class Parse {
     public static Source(transpiler: Transpiler) {
         transpiler.config.layer();
