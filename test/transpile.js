@@ -1,4 +1,4 @@
-const flave = require('../index.js');
+const flave = require('../dist/index.js');
 const fs = require('fs');
 const config = {
     quote: '\'',
@@ -15,6 +15,6 @@ transpile('./sample/sample.flave', './sample/sample.js');
 function transpile(src, dest) {
     fs.readFile(src, function (error, data) {
         if (!error)
-            fs.writeFileSync(dest, flave.transpile(data.toString(), config))
+            fs.writeFileSync(dest, flave.Transpile(data.toString(), config))
     })
 }

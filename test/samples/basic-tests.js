@@ -1,3 +1,4 @@
+import {test} from './test'
 function test(data){var $O = '';$O += '<span> \n'+'</span>\n';return $O;};
 function test(data){var $O = '';$O += '<span></span>\n';return $O;};
 function test(data){var $O = '';$O += '<span>\n'+'</span>\n';return $O;};

@@ -1,3 +1,6 @@
+/*#### Import ####*/
+/*## Import Statement ##*/
+import {test} from './test'
 /*#### Comments ####*/
 /*## Single Line Comment ##*/
 function test(data){var $O = '';$O += '<span> \n'+'</span>\n';return $O;};

@@ -1,7 +1,6 @@
-const flave = require('../index.js'),
+const flave = require('../dist/index.js'),
     assert = require('assert'),
     fs = require('fs'),
-    $C = require('../constants.js'),
     config_unformatted = {
         quote: '\'',
         stripcomments: true,
@@ -30,8 +29,8 @@ for (var section in flaves) {
             var string_formatted = (formatted[section][test]);
             var string_unformatted = (unformatted[section][test]);
             describe(test, () => {
-                it('Formatted ', () => { assert.equal(flave.transpile(string_flave, config_formatted).trim(), string_formatted) });
-                it('Unformatted ', () => { assert.equal(flave.transpile(string_flave, config_unformatted).trim(), string_unformatted) });
+                it('Formatted ', () => { assert.equal(flave.Transpile(string_flave, config_formatted).trim(), string_formatted) });
+                it('Unformatted ', () => { assert.equal(flave.Transpile(string_flave, config_unformatted).trim(), string_unformatted) });
             });
         }
     });
