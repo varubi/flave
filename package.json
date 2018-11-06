@@ -31,7 +31,7 @@
   "homepage": "https://github.com/varubi/flave#readme",
   "devDependencies": {
     "@types/node": "^10.12.2",
-    "mocha": "^3.4.2",
+    "mocha": "^5.2.0",
     "tsc": "^1.20150623.0"
   }
 }
