@@ -29,8 +29,8 @@ for (var section in flaves) {
             var string_formatted = (formatted[section][test]);
             var string_unformatted = (unformatted[section][test]);
             describe(test, () => {
-                it('Formatted ', () => { assert.equal(flave.Transpile(string_flave, config_formatted).trim(), string_formatted) });
-                it('Unformatted ', () => { assert.equal(flave.Transpile(string_flave, config_unformatted).trim(), string_unformatted) });
+                it('Formatted ', () => { assert.equal(flave.transpile(string_flave, config_formatted).trim(), string_formatted) });
+                it('Unformatted ', () => { assert.equal(flave.transpile(string_flave, config_unformatted).trim(), string_unformatted) });
             });
         }
     });

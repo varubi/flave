@@ -15,6 +15,6 @@ transpile('./sample/sample.flave', './sample/sample.js');
 function transpile(src, dest) {
     fs.readFile(src, function (error, data) {
         if (!error)
-            fs.writeFileSync(dest, flave.Transpile(data.toString(), config))
+            fs.writeFileSync(dest, flave.transpile(data.toString(), config))
     })
 }
